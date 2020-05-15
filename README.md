@@ -2,13 +2,18 @@
 
 This project aims at providing a "blurring background", a feature that is absent on most Linux implementation of teleconferencing softwares.
 
-Based on [BodyPix](https://github.com/tensorflow/tfjs-models/tree/master/body-pix), [v4l2loopback](https://github.com/umlaeute/v4l2loopback) and its Python3 binder  [pyfakewebcam](https://github.com/jremmons/pyfakewebcam), [tfjs to tf converter](https://github.com/patlevin/tfjs-to-tf) and [Streamlit](https://github.com/streamlit/streamlit) to create a user-friendly interface.
+It runs pretty smoothly on CPU
+
+Based on [BodyPix](https://github.com/tensorflow/tfjs-models/tree/master/body-pix), [v4l2loopback](https://github.com/umlaeute/v4l2loopback) and its Python3 binder [pyfakewebcam](https://github.com/jremmons/pyfakewebcam), [tfjs to tf converter](https://github.com/patlevin/tfjs-to-tf) and [Streamlit](https://github.com/streamlit/streamlit) to create a user-friendly interface.
+
+![](docs/demo.gif)
+
 
 To use it:
 
 First we need to create a virtual webcam.
 Get v4l2loopback via
-> `sudo apt-get install -y v4l2loopback-dkms`
+> `sudo apt install -y v4l2loopback-dkms`
 
 Create fake device:
 > `modprobe v4l2loopback exclusive_caps=1`

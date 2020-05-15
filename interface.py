@@ -142,6 +142,7 @@ def capture_display_video(vc, sess, graph, nb_frames, fake_camera):
             placeholder.image(displayed_frame, channels="BGR")
         if write_to_device:
             fake_camera.schedule_frame(cv2.cvtColor(displayed_frame, cv2.COLOR_BGR2RGB))
+        text_placeholder.text(f'Preview: {show_preview} -- v4l2: {write_to_device}')
 
         ret, original_frame = vc.read()
         i += 1
@@ -216,7 +217,6 @@ def main():
 
     if show_preview or write_to_device:
         vc = cv2.VideoCapture(0)
-        vc.set(cv2.CAP_PROP_FPS, 1)
         if not vc.isOpened():
             raise Exception("Cannot capture video")
         capture_display_video(vc, sess, graph, nb_frames, fake_camera)
