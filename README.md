@@ -6,7 +6,8 @@ It runs pretty smoothly on CPU
 
 Based on [BodyPix](https://github.com/tensorflow/tfjs-models/tree/master/body-pix), [v4l2loopback](https://github.com/umlaeute/v4l2loopback) and its Python3 binder [pyfakewebcam](https://github.com/jremmons/pyfakewebcam), [tfjs to tf converter](https://github.com/patlevin/tfjs-to-tf) and [Streamlit](https://github.com/streamlit/streamlit) to create a user-friendly interface.
 
-![](docs/demo.gif)
+Little example, working well with an uneven background.
+![Example using Zoom](docs/demo_2.gif)
 
 
 To use it:
