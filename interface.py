@@ -20,7 +20,6 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 def open_fake_device():
     return pyfakewebcam.FakeWebcam("/dev/video2", V4L2_WIDTH, V4L2_HEIGHT)
 
-
 #######################
 # MobileNet preprocess:  RGB_Image / 127.5 - 1
 # https://github.com/tensorflow/tfjs-models/blob/master/body-pix/src/mobilenet.ts#L24
@@ -62,7 +61,7 @@ def process_frame(frame, sess, graph, inputs, outputs, threshold, output_stride,
     Returns
     -------
     numpy array
-        A binary mask depending if someone is present at location (x,y)
+        A binary mask, 1 if someone is present at location (x,y), else 0
     """
 
     height, width = frame.shape[:2]
@@ -71,6 +70,7 @@ def process_frame(frame, sess, graph, inputs, outputs, threshold, output_stride,
 
     target_width = (int(processed_frame.shape[1]) // output_stride) * output_stride + 1
     target_height = (int(processed_frame.shape[0]) // output_stride) * output_stride + 1
+    # Counter intuitive resizing as it doesn't keep the ratio, but seems to better segment the torso.
     cv_sized_frame = cv2.resize(processed_frame, (target_height, target_width)).astype(np.float32)
     if model=='mobilenet':
         cv_sized_frame = cv_sized_frame / 127.5 - 1
@@ -101,8 +101,7 @@ def capture_display_video(vc, sess, graph, nb_frames, fake_camera):
     output_tensor_names = tfjs_util.get_output_tensors(graph)
 
     ret, original_frame = vc.read()
-
-    overlay = np.zeros(original_frame.shape)
+    mask = np.zeros(original_frame.shape)
 
     background = (
         cv2.resize(cv2.imread(chosen_background), (original_frame.shape[1], original_frame.shape[0]))
@@ -116,7 +115,7 @@ def capture_display_video(vc, sess, graph, nb_frames, fake_camera):
             if chosen_background == "blur":
                 background = cv2.GaussianBlur(original_frame, (blurring_kernel_size, blurring_kernel_size), 0)
 
-            overlay = process_frame(
+            mask = process_frame(
                 original_frame,
                 sess,
                 graph,
@@ -130,13 +129,15 @@ def capture_display_video(vc, sess, graph, nb_frames, fake_camera):
             processing_time = time.time() - start
             start = time.time()
 
-            overlay = cv2.resize(
-                overlay, (original_frame.shape[1], original_frame.shape[0]), interpolation=cv2.INTER_CUBIC
-            )
-            overlay = np.reshape(overlay, (*overlay.shape, 1))
-            second_text.text(f"Model took: {str(processing_time)[:5]}")
+            # Smoothing the mask so there's no "stairs"
+            mask = cv2.cvtColor((mask).astype(np.float32), cv2.COLOR_GRAY2BGR)
+            mask = cv2.resize(mask, (original_frame.shape[1],
+                                    original_frame.shape[0]),
+                            interpolation=cv2.INTER_CUBIC)
+            mask = cv2.GaussianBlur(mask, (31,31), 31)
+            second_text.text(f"Model took: {round(processing_time, 3)}. Alpha: {round(time.time() - start, 3)}")
 
-        displayed_frame = np.where(overlay==[0], background, original_frame) if chosen_background else original_frame
+        displayed_frame = cv2.convertScaleAbs(original_frame*mask + background*(1-mask)) if chosen_background else original_frame
 
         if show_preview:
             placeholder.image(displayed_frame, channels="BGR")
